@@ -8,7 +8,7 @@ class state:
         self.max_moves = 1
         self.min_moves = 1
         self.chance_dist = [1.0]
-        self.game_over = True
+        self.game_over = False
         self._updated = False
         self._value = 0
         self._game = nash.Game(np.array([[1]], dtype=float))
@@ -59,17 +59,16 @@ class rps(state):
     paper = 1
     scissors = 2
 
-    def __init__(self, game_over=False):
-        if game_over:
-            state.__init__(self)
-        else:
-            state.__init__(self)
-            self.max_moves = 3
-            self.min_moves = 3
-            self.game_over = False
+    def __init__(self):
+        state.__init__(self)
+        self.max_moves = 3
+        self.min_moves = 3
 
     def successor(self, max_m=0, min_m=0, chance_m=0):
-        result = rps(game_over=True)
+        result = rps()
+        result.min_moves = 1
+        result.max_moves = 1
+        result.game_over = True
 
         if max_m == min_m + 1 or max_m == min_m - 2:
             result.value = 1
@@ -81,20 +80,7 @@ class rps(state):
         return result
 
 
-class test(state):
-    def __init__(self):
-        state.__init__(self)
-        self.max_moves = 3
-        self.game_over = False
-
-    def successor(self, max_m=0, min_m=0, chance_m=0):
-        result = test()
-        result.value = 1.0
-        result.game_over = True
-        return result
-
-
-r1 = test()
+r1 = rps()
 print(r1.value)
 for s in r1.strategies:
     print(s)
