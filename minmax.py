@@ -4,17 +4,14 @@ import numpy as np
 
 
 class state:
-    def __init__(self):
-        self.max_moves = 1
-        self.min_moves = 1
-        self.chance_dist = [1.0]
+    def __init__(self, prev=None, m_max=0, m_min=0, m_chance=0):
+        self.moves_max = 1
+        self.moves_min = 1
+        self.moves_chance = 1
         self.game_over = False
         self._updated = False
         self._value = 0
         self._game = nash.Game(np.array([[1]], dtype=float))
-
-    def successor(self, max_m=0, min_m=0, chance_m=0):
-        return state()
 
     def _update(self):
         if not self.game_over and not self._updated:
@@ -37,21 +34,32 @@ class state:
     value = property(_get_value, _set_value)
 
     def _calc_strat(self):
-        payoffs = np.empty((self.max_moves, self.min_moves), dtype=float)
-
-        for max_m in range(self.max_moves):
-            for min_m in range(self.min_moves):
-                payoffs[max_m, min_m] = self._avg_outcome(max_m, min_m)
-
+        payoffs = np.empty((self.moves_max, self.moves_min), dtype=float)
+        for m_max in range(self.moves_max):
+            for m_min in range(self.moves_min):
+                payoffs[m_max, m_min] = self._avg_outcome(m_max, m_min)
         self._game = nash.Game(payoffs)
         self._value = self._game[next(self.strategies)][0]
 
-    def _avg_outcome(self, max_m, min_m):
+    def _avg_outcome(self, m_max, m_min):
         result = 0
-        for chance_m, prob in enumerate(self.chance_dist):
-            successor = self.successor(max_m, min_m, chance_m)
+        for m_chance in range(self.moves_chance):
+            successor = self.__class__(self, m_max, m_min, m_chance)
+            result += successor.value
+        return result / self.moves_chance
+
+
+class state_nonuniform(state):
+    def __init__(self, prev=None, m_max=0, m_min=0, m_chance=0):
+        state.__init__(self)
+        self.chance_dist = np.array([1], dtype=float)
+
+    def _avg_outcome(self, m_max, m_min):
+        result = 0
+        for m_chance, prob in enumerate(self.chance_dist):
+            successor = self.__class__(self, m_max, m_min, m_chance)
             result += successor.value * prob
-        return successor.value
+        return result / np.sum(self.chance_dist)
 
 
 class rps(state):
@@ -59,33 +67,32 @@ class rps(state):
     paper = 1
     scissors = 2
 
-    def __init__(self):
+    def __init__(self, prev=None, m_max=0, m_min=0, m_chance=0):
         state.__init__(self)
-        self.max_moves = 3
-        self.min_moves = 3
 
-    def successor(self, max_m=0, min_m=0, chance_m=0):
-        result = rps()
-        result.min_moves = 1
-        result.max_moves = 1
-        result.game_over = True
-
-        if max_m == min_m + 1 or max_m == min_m - 2:
-            result.value = 1
-        elif max_m == min_m - 1 or max_m == min_m + 2:
-            result.value = -1
+        if prev == None:
+            self.moves_max = 3
+            self.moves_min = 3
         else:
-            result.value = 0
+            self.moves_min = 1
+            self.moves_max = 1
+            self.game_over = True
 
-        return result
+            if m_max == m_min + 1 or m_max == m_min - 2:
+                self.value = 1
+            elif m_max == m_min - 1 or m_max == m_min + 2:
+                self.value = -1
+            else:
+                self.value = 0
 
 
-r1 = rps()
-print(r1.value)
-for s in r1.strategies:
-    print(s)
+if __name__ == '__main__':
+    r1 = rps()
+    print(r1.value)
+    for s in r1.strategies:
+        print(s)
 
-r2 = r1.successor(0)
-print(r2.value)
-for s in r2.strategies:
-    print(s)
+    r2 = rps(r1, 0, 0)
+    print(r2.value)
+    for s in r2.strategies:
+        print(s)
