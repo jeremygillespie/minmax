@@ -62,11 +62,15 @@ class deuces(state):
         self.possible = []
 
         if self.to_beat.size == 0:
-            # return all possible plays with only one value
+            # all possible plays with only one value
             pass
 
         else:
-            # TODO
+            # all possible plays with:
+            # size == to_beat.size and
+            # only one value and
+            # ( val > to_beat.val or
+            # val == to_beat.val and play.high_card > to_beat.high_card )
             pass
 
         if turn == player_max:

@@ -23,6 +23,11 @@ def choose(n, k, i):
     return result
 
 
+def choose_all(n, k):
+    # return a generator of all choices
+    pass
+
+
 def choose_array(arr, k, i):
     n = np.count_nonzero(arr)
     needed = k
